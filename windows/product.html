@@ -1,1 +1,171 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body id="product-data">
+    <nav class="navbar navbar-dark bg-dark">
+        <div style="display: inline-block;font-size: 13px;color:aliceblue">
+            <span id="store-name" class="ms-2">My Store</span>
+            </div>
+        </div>
+        <div style="display: inline-block;">
+            <div class="dropdown" style="display: inline;">
+                <a href="#" class="btn btn-sm btn-primary me-2" id="userInfoDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-user"></i>
+                    <span id="userFirstName">User</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end dropdown-light" style="width: 350px;" aria-labelledby="userInfoDropdown">
+                    <div class="dropdown-body">
+                        <table class="table table-sm table-bordered" style="font-size: 13px;border-radius:100%; text-align: center;">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Access Level</th>
+                                    <th>Position</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td id="userAccessLevel"></td>
+                                    <td id="userPosition"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="toolbar">
+        <div class="toolbar-menu">
+            <div class="row">
+                <div class="col-xl-12">
+                    <div class="main-toolbar">
+                        <div class="row g-3">
+                            <div class="col-auto">
+                                <button class="btn btn-sm btn-light btn-light-bordered" id="add-data" title="Tambah Data" onclick="openFormAddData()"><i class="fa fa-plus"></i></button>
+                                <button class="btn btn-sm btn-light btn-light-bordered" onclick="deleteAction()" id="delete-multiple-data" data-bs-toggle="tooltip" title="Hapus"><i class="fa fa-trash"></i></button>
+                                <button class="btn btn-sm btn-light btn-light-bordered" title="Export CSV" onclick="exportData('csv')"><i class="fa fa-file-excel"></i></button>
+                                <button class="btn btn-sm btn-light btn-light-bordered" title="Export PDF" onclick="exportData('pdf')"><i class="fa fa-file-pdf"></i></button>
+                                <button class="btn btn-sm btn-light btn-light-bordered" title="Print Table" onclick="printData()"><i class="fa fa-print"></i></button>
+                                <button class="btn btn-sm btn-light btn-light-bordered" onclick="selectAll()" id="select-all" title="Select All"><i class="fa fa-check"></i></button>
+                                <button class="btn btn-sm btn-light btn-light-bordered" onclick="unSelectAll()" id="unselect-all" title="Unselect All"><i class="fa fa-times"></i></button>
+                            </div>
+                            <div class="col-auto">
+                                <select name="" id="row_per_page" class="form-select form-select-sm">
+                                    <option value="2">2</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="75">75</option>
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <div class="input-group" id="search-input-group">
+                                    <input type="text" class="form-control form-control-sm" id="search-data" name="search-data" placeholder="Search">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-sm btn-light btn-light-bordered" id="btn-search-data"><i class="fa fa-search"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="pagination" class="col-auto">
+                                <div class="btn-group btn-group-sm">
+                                    <div class="btn-group btn-group-sm me-1">
+                                        <a href="#" class="btn btn-sm btn-light btn-light-bordered" id="first-page"><i class="fa fa-step-backward"></i></a>
+                                        <a href="#" class="btn btn-sm btn-light btn-light-bordered" id="prev-page"><i class="fa fa-backward"></i></a>
+                                    </div>
+                                    <div class="input-group input-group-sm me-1">
+                                        <input type="text" class="form-control form-control-sm" id="page_number" value="1">
+                                        <input type="text" class="form-control form-control-sm" id="total_pages" readonly>
+                                    </div>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="#" class="btn btn-sm btn-light btn-light-bordered" id="next-page"><i class="fa fa-forward"></i></a>
+                                        <a href="#" class="btn btn-sm btn-light btn-light-bordered" id="last-page"><i class="fa fa-step-forward"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="main-table">
+        <div id="form-add-data">
+            <div style="padding: 20px 20px 20px 20px;">
+                <h6>Tambah data</h6>
+                <div style="color: black;" class="row">
+                    <div class="col-auto">
+                        <input type="text" class="form-control form-control-sm" placeholder="Nama Produk" id="product_name" required>
+                    </div>
+                    <div class="col-auto">
+                        <select name="" id="product_category" class="form-select form-select-sm">
+                            <option value="">Kategori</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="far fa-money-bill-alt"></i></span>
+                            <input type="text" class="form-control form-control-sm" id="product_price" placeholder="Harga Jual" required>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <input type="text" class="form-control form-control-sm" placeholder="Harga Pokok" id="product_cost" required>
+                    </div>
+                    <div class="col-auto">
+                        <input type="text" class="form-control form-control-sm" placeholder="Stok Awal" id="product_initial_qty">
+                    </div>
+                    <div class="col-auto">
+                        <select name="" id="product_unit" class="form-select form-select-sm">
+                            <option value="">Satuan</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <input type="text" class="form-control form-control-sm" placeholder="Barcode" id="product_barcode" required>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-sm btn-primary" onclick="insertProduct()"><i class="fa fa-paper-plane"></i> Submit</button>
+                        <button class="btn btn-sm btn-secondary" id="close-form-add-data" onclick="closeFormAddData()"><i class="fa fa-times"></i> Tutup</button>
+                    </div>
+                </div>
+            </div> 
+        </div>
+        <div style="padding: 20px 20px 20px 20px;">
+            <div class="row">
+                <div class="col-xl-12">
+                    <div id="alert"></div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered" style="font-size: 13px;">
+                            <thead class="table-light" id="col-head">
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Nama Produk</th>
+                                    <th>Kode Produk</th>
+                                    <th>Barcode</th>
+                                    <th>Kategori</th>
+                                    <th>Satuan</th>
+                                    <th>Harga Jual / Satuan</th>
+                                    <th>Harga Pokok / Satuan</th>
+                                    <th>Saldo Awal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="data"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../assets/jquery/jquery-1.9.0.min.js"></script>
+    <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../assets/js/require.js"></script>
+    <script src="../assets/js/toolbar.js"></script>
+    <script src="../assets/js/product.js"></script>
+    <script src="../assets/js/main.js"></script>
+</body>
+</html>
