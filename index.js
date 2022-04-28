@@ -14,6 +14,7 @@ let editDataModal
 let toPdf
 let printPage
 let cashierWindow
+let salesModal
 mainWin = () => {
     mainWindow = new BrowserWindow({
         webPreferences: {
@@ -303,4 +304,234 @@ ipcMain.on('load:cashier-window', () => {
 
 ipcMain.on('close:cashier', () => {
     cashierWindow.close()
+})
+
+modalSales = (salesNumber, title, totalSales, buyerInfo) => {
+    let width
+    let height
+    let frameBoolVal
+    let titleBar
+    let content
+    let buyerAddress = buyerInfo
+    let tr = ''
+    switch(title) {
+        case 'discount-final' :
+            width = 620
+            height = 350
+            frameBoolVal = true
+            titleBar = 'Potongan Final'
+            db.all(`select sum(total) as total from sales where invoice_number = '${salesNumber}'`, (err, row) => {
+                if(err) throw err
+                if(row.length < 1) {
+                    console.log(`no sales with number '${salesNumber}'`)
+                } else {
+                    let total_sales = row[0].total
+                    db.all(`select * from discount_final where invoice_number = '${salesNumber}'`, (err, row) => {
+                        if(err) throw err
+                        if(row.length < 1) {
+                            content = `<div class="mb-2">
+                                            <small>* Silahkan beri diskon sesuai dengan jenis yang diinginkan (% atau tunai (Rp) atau kedua-duanya)</small><br>
+                                            <small>* Masukkan persentase potongan tanpa diikuti tanda % dan jumlah potongan tanpa diikuti tanda Rp</small><br>
+                                        </div>
+                                        <div class="mb-2">
+                                            <div class="mb-2">
+                                                <label>Potongan (%)</label>
+                                                <input type="hidden" id="total-sales" value="${total_sales}">
+                                                <input type="hidden" class="invoice-number" id="invoice-number" value="${salesNumber}">
+                                                <input type="hidden" id="total-discount-final">
+                                                <input type="text" class="form-control form-control-sm" onkeyup="newDiscountFinal()" id="discount-final-percent">
+                                            </div>
+                                            <div class="mb-2">
+                                            <label>Potongan Tunai (Rp)</label>
+                                            <input type="text" class="form-control form-control-sm" onkeyup="newDiscountFinal()" id="discount-final-money">
+                                            </div>
+                                        </div>`
+                        } else {
+                            content = `<div class="mb-2">
+                                            <small>* Silahkan beri diskon sesuai dengan jenis yang diinginkan (% atau tunai (Rp) atau kedua-duanya)</small><br>
+                                            <small>* Masukkan persentase potongan tanpa diikuti tanda % dan jumlah potongan tanpa diikuti tanda Rp</small><br>
+                                        </div>
+                                        <div class="mb-2">
+                                            <div class="mb-2">
+                                                <label>Potongan (%)</label>
+                                                <input type="hidden" id="total-sales" value="${total_sales}">
+                                                <input type="hidden" class="invoice-number" id="invoice-number" value="${row[0].invoice_number}" data-id="${row[0].id}">
+                                                <input type="hidden" id="total-discount-final" value="${row[0].total_discount_final}">
+                                                <input type="text" class="form-control form-control-sm" onkeyup="newDiscountFinal()" id="discount-final-percent" value="${row[0].discount_percent}">
+                                            </div>
+                                            <div class="mb-2">
+                                            <label>Potongan Tunai (Rp)</label>
+                                            <input type="text" class="form-control form-control-sm" onkeyup="newDiscountFinal()" id="discount-final-money" value="${row[0].discount_money}">
+                                            </div>
+                                        </div>`
+                        }
+                    })
+                }
+            })
+            //content = `<h1>${titleBar}</h1>`
+            break;
+        case 'discount' :
+            width = 800
+            height = 400
+            frameBoolVal = true
+            titleBar = 'Potongan Produk'
+            db.all(`select * from sales where invoice_number = '${salesNumber}'`, (err, rows) => {
+                if(err) throw err
+                if(rows.length < 1) {
+                    console.log(`no sales with number '${salesNumber}'`)
+                } else {
+                    rows.map( (row) => {
+                        tr+=`<tr>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm disable input-product-name" id="input-product-name-${row.id}" value="${row.product_name}" disabled>
+                                    <input type="hidden" class="input-input-date" id="input-input-date-${row.id}" value="${row.input_date}" data-id="${row.id}">
+                                    <input type="hidden" class="input-invoice-number" id="input-invoice-number-${row.id}" value="${row.invoice_number}" data-id="${row.id}">
+                                    <input type="hidden" class="input-buyer" id="input-buyer-${row.id}" value="${row.buyer}" data-id="${row.id}">
+                                    <input type="hidden" class="input-buyer-id" id="input-buyer-id-${row.id}" value="${row.buyer_id}" data-id="${row.id}">
+                                    <input type="hidden" class="input-payment" id="input-payment-${row.id}" value="${row.payment}" data-id="${row.id}">
+                                    <input type="hidden" class="input-description" id="input-description-${row.id}" value="${row.description}" data-id="${row.id}">
+                                    <input type="hidden" class="input-po-number" id="input-po-number-${row.id}" value="${row.po_number}" data-id="${row.id}">
+                                    <input type="hidden" class="input-due-date" id="input-due-date-${row.id}" value="${row.due_date}" data-id="${row.id}">
+                                    <input type="hidden" class="input-term" id="input-term-${row.id}" value="${row.term}" data-id="${row.id}">
+                                    <input type="hidden" class="input-sales-admin" id="input-sales-admin-${row.id}" value="${row.sales_admin}" data-id="${row.id}">
+                                    <input type="hidden" class="input-cost-of-product" id="input-cost-of-product-${row.id}" value="${row.cost_of_product}" data-id="${row.id}">
+                                    <input type="hidden" class="input-total" id="input-total-${row.id}" value="${row.total}" data-id="${row.id}">
+                                    <input type="hidden" class="input-prd-price" id="input-prd-price-${row.id}" value="${row.price}" data-id="${row.id}">
+                                    <input type="hidden" class="input-qty" id="input-qty-${row.id}" value="${row.qty}" data-id="${row.id}">
+                                    <input type="hidden" class="input-unit" id="input-unit-${row.id}" value="${row.unit}" data-id="${row.id}">
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm disable input-product-code" id="input-product-code-${row.id}" value="${row.product_code}" disabled>    
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm input-discount-percent" onkeyup="newTotal(${row.id})" value="${row.discount_percent}" id="input-discount-percent-${row.id}">
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm input-discount-money" onkeyup="newTotal(${row.id})" value="${row.discount_money}" id="input-discount-money-${row.id}">
+                                </td>
+                            </tr>`
+                    })
+                    content = `<div class="mb-2">
+                                    <small>* Silahkan beri diskon sesuai dengan jenis yang diinginkan (% atau tunai (Rp) atau kedua-duanya)</small><br>
+                                    <small>* Masukkan persentase potongan tanpa diikuti tanda % dan jumlah potongan tanpa diikuti tanda Rp</small><br>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-borderless" style="font-size:13px;">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Nama Produk</th>
+                                                <th>Kode Produk</th>
+                                                <th>Potongan (%)</th>
+                                                <th>Potongan (Rp)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${tr}
+                                        </tbody>
+                                    </table>    
+                                </div>`
+                }
+            })
+            //content = `<h1>${titleBar}</h1>`
+            break;
+        case 'qty' :
+            width = 700
+            height = 400
+            frameBoolVal = true
+            titleBar = 'Edit Qty'
+            db.all(`select * from sales where invoice_number = '${salesNumber}'`, (err, rows) => {
+                if(err) throw err
+                if(rows.length < 1) {
+                    console.log(`no sales with number '${salesNumber}'`)
+                } else {
+                    rows.map( (row) => {
+                        tr+=`<tr>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm disable input-product-name" id="input-product-name-${row.id}" value="${row.product_name}" disabled>
+                                    <input type="hidden" class="input-input-date" id="input-input-date-${row.id}" value="${row.input_date}" data-id="${row.id}">
+                                    <input type="hidden" class="input-invoice-number" id="input-invoice-number-${row.id}" value="${row.invoice_number}" data-id="${row.id}">
+                                    <input type="hidden" class="input-buyer" id="input-buyer-${row.id}" value="${row.buyer}" data-id="${row.id}">
+                                    <input type="hidden" class="input-buyer-id" id="input-buyer-id-${row.id}" value="${row.buyer_id}" data-id="${row.id}">
+                                    <input type="hidden" class="input-payment" id="input-payment-${row.id}" value="${row.payment}" data-id="${row.id}">
+                                    <input type="hidden" class="input-description" id="input-description-${row.id}" value="${row.description}" data-id="${row.id}">
+                                    <input type="hidden" class="input-po-number" id="input-po-number-${row.id}" value="${row.po_number}" data-id="${row.id}">
+                                    <input type="hidden" class="input-due-date" id="input-due-date-${row.id}" value="${row.due_date}" data-id="${row.id}">
+                                    <input type="hidden" class="input-term" id="input-term-${row.id}" value="${row.term}" data-id="${row.id}">
+                                    <input type="hidden" class="input-sales-admin" id="input-sales-admin-${row.id}" value="${row.sales_admin}" data-id="${row.id}">
+                                    <input type="hidden" class="input-cost-of-product" id="input-cost-of-product-${row.id}" value="${row.cost_of_product}" data-id="${row.id}">
+                                    <input type="hidden" class="input-total" id="input-total-${row.id}" value="${row.total}" data-id="${row.id}">
+                                    <input type="hidden" class="input-prd-price" id="input-prd-price-${row.id}" value="${row.price}" data-id="${row.id}">
+                                    <input type="hidden" class="input-unit" id="input-unit-${row.id}" value="${row.unit}" data-id="${row.id}">
+                                    <input type="hidden" class="input-discount-percent" id="input-discount-percent-${row.id}" value="${row.discount_percent}" data-id="${row.id}">
+                                    <input type="hidden" class="input-discount-money" id="input-discount-money-${row.id}" value="${row.discount_money}" data-id="${row.id}">
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm disable input-product-code" id="input-product-code-${row.id}" value="${row.product_code}" disabled>    
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm input-qty" onkeyup="newTotal(${row.id})" value="${row.qty}" id="input-qty-${row.id}" data-id="${row.id}">
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm disable" id="input-unit-${row.id}" value="${row.unit}" disabled>
+                                </td>
+                            </tr>`
+                    })
+                    content = `<div class="table-responsive">
+                                    <table class="table table-sm table-borderless" style="font-size:13px;">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Nama Produk</th>
+                                                <th>Kode Produk</th>
+                                                <th>Qty</th>
+                                                <th>Unit</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${tr}
+                                        </tbody>
+                                    </table>    
+                                </div>`
+                }
+            })
+            //content = `<h1>${titleBar}</h1>`
+            break;
+        case 'checkout' :
+            width = 400
+            height = 400
+            frameBoolVal = true
+            titleBar = 'checkout'
+            content = `<h1>${titleBar}</h1>`
+    }
+
+    salesModal = new BrowserWindow(
+        {
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false
+            },
+            autoHideMenuBar: true,
+            width: width,
+            height: height,
+            parent: cashierWindow,
+            modal: true,
+            resizable: false,
+            minimizable: false,
+            frame: frameBoolVal,
+            title: titleBar
+        }
+    )
+    remote.enable(salesModal.webContents)
+    salesModal.loadFile('modals/sales-modal.html')
+    salesModal.webContents.on('dom-ready', () => {
+        salesModal.webContents.send('load:tbody-tr', content, title, buyerAddress)
+    })
+}
+
+ipcMain.on('load:sales-modal', (e, msgSalesNumber, msgTitle, msgTotalSales, msgBuyerInfo) => {
+    modalSales(msgSalesNumber, msgTitle, msgTotalSales, msgBuyerInfo)
+})
+
+ipcMain.on('update-success:sales-edit', () => {
+    salesModal.close()
+    cashierWindow.webContents.send('update-success:sales-edit')
 })
