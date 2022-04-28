@@ -245,8 +245,8 @@ totalSales = (sales_number) => {
                     }
                 })
             } else {
-                let discount_percent = row.discount_percent
-                let discount_money = row.discount_money
+                let discount_percent = row[0].discount_percent
+                let discount_money = row[0].discount_money
                 let discount_final_info
                 if(discount_percent == "" && discount_money == "") {
                     discount_final_info = ""
@@ -257,6 +257,7 @@ totalSales = (sales_number) => {
                 } else if(discount_percent == "" && discount_money != "") {
                     discount_final_info = `${numberFormat(discount_money)}`
                 }
+                
                 $('#discount-final').html(discount_final_info)
                 let total_discount_final = row[0].total_discount_final
                 db.all(`select total_tax from sales_tax where invoice_number = '${sales_number}'`, (err, row) => {
@@ -316,3 +317,46 @@ salesTax = (sales_number, tax_rate) => {
         }
     })
 }
+
+salesModal = (title) => {
+    let buyer_address = $('#buyer-address').val()
+    let sales_number = $('#sales-number').val()
+    let total_sales = $('#input-total-and-tax').val()
+    if(sales_number != "") {
+        db.all(`select * from sales where invoice_number = '${sales_number}'`, (err, rows) => {
+            if(rows.length < 1) {
+                let alert = dialog.showMessageBoxSync(
+                    {
+                        title: 'Alert',
+                        type: 'info',
+                        message: 'Tidak terdapat record penjualan yang dapat diedit, silahkan masukkan record penjualan terlebih dahulu'
+                    }
+                )
+            } else {
+                ipcRenderer.send('load:sales-modal', sales_number, title, total_sales, buyer_address)
+            }
+        })
+    } else {
+        let alert = dialog.showMessageBoxSync(
+            {
+                title: 'Alert',
+                type: 'info',
+                message: 'Silahkan buat penjualan baru terlebih dahulu'
+            }
+        )
+        if(alert == 0) {
+            $('#btn-new-sales').focus()
+        }
+    }
+}
+
+ipcRenderer.on('update-success:sales-edit', () => {
+    let sales_number = $('#sales-number').val()
+    let tax_rate = $('#input-tax').val()
+    loadSales(sales_number)
+    if(tax_rate != "") {
+        salesTax(sales_number, tax_rate)
+    } else {
+        totalSales(sales_number)
+    }
+})
