@@ -12,7 +12,7 @@
 <body style="background-color: #F0F3F4;">
     <nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark">
         <div style="display: inline-block; font-size: 13px; color: aliceblue;">
-            <img src="../assets/images/icons/small-cashier-machine.png" class="ms-2" id="store-logo" width="30" height="30" alt="">
+            <img src="" class="ms-2" id="store-logo" width="30" height="30" alt="">
             <span id="store-name"></span>
         </div>
     </nav>
@@ -22,11 +22,11 @@
                 <div class="box">
                     <div class="box-header with-border">
                         <h6>
-                            <img src="" class="me-sm-1" alt="">
-                            <button class="btn btn-sm btn-light btn-light-bordered mb-2" title="Edit Qty" id="edit-qty"><i class="fas fa-dolly"></i></button>
-                            <button class="btn btn-sm btn-light btn-light-bordered mb-2" title="Potongan" id="discount_product"><i class="fa fa-tag"></i></button>
-                            <button class="btn btn-sm btn-light btn-light-bordered mb-2" title="Potongan Final" id="discount_final"><i class="fa fa-tags"></i></button>
-                            <button class="btn btn-sm btn-light btn-light-bordered mb-2" title="Tambah Penjualan" id="btn-new-sales" data-bs-toggle="modal" data-bs-backdrop="false" data-bs-target="#modal-new-sales" autofocus><i class="fa fa-plus"></i></button>
+                            <img src="../assets/images/icons/small-cashier-machine.png" class="me-sm-1" alt=""> Cashier
+                            <button onclick="salesModal('qty')" class="btn btn-sm btn-light btn-light-bordered mb-2 me-sm-1 float-end" title="Edit Qty" id="edit-qty"><i class="fas fa-dolly"></i></button>
+                            <button onclick="salesModal('discount')" class="btn btn-sm btn-light btn-light-bordered mb-2 me-sm-1 float-end" title="Potongan" id="discount_product"><i class="fa fa-tag"></i></button>
+                            <button onclick="salesModal('discount-final')" class="btn btn-sm btn-light btn-light-bordered mb-2 me-sm-1 float-end" title="Potongan Final" id="discount_final"><i class="fa fa-tags"></i></button>
+                            <button class="btn btn-sm btn-light btn-light-bordered mb-2 me-sm-1 float-end" title="Tambah Penjualan" id="btn-new-sales" data-bs-toggle="modal" data-bs-backdrop="false" data-bs-target="#modal-new-sales" autofocus><i class="fa fa-plus"></i></button>
                         </h6>
                     </div>
                     <div class="box-body">
@@ -64,7 +64,7 @@
                                 <tbody>
                                     <tr>
                                         <td><span class="float-end">Potongan Final</span></td>
-                                        <td><span class="float-end" id="discount_final"></span></td>
+                                        <td><span class="float-end" id="discount-final"></span></td>
                                         <td></td>
                                     </tr>
                                     <tr>
@@ -78,6 +78,7 @@
                                     <tr>
                                         <td><span class="float-end"><b>Total</b></span></td>
                                         <td><span class="float-end" id="total-and-tax" style="font-weight: bold;"></span></td>
+                                        <input type="hidden" id="input-total-and-tax">
                                         <td></td>
                                     </tr>
                                 </tbody>
