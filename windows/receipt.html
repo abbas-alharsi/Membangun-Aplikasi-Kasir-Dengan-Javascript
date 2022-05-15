@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+    <div style="padding: 0px 20px 20px 20px">
+        <h3 style="text-align:center;font-weight:bold" id="store-name"></h3>
+        <h6 style="text-align:center" id="store-address"></h6>
+        <h6 style="text-align:center" id="store-tax-number"></h6>
+        <h6 style="text-align:center" id="store-telp" class="mb-3"></h6>
+        <div style="border-bottom: 1px solid black;width:100%"></div>
+        <table class="table table-sm table-borderless mt-3">
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th><span id="date"></span></th>
+                </tr>
+                <tr>
+                    <th>Nomor</th>
+                    <th><span id="sales-number"></span></th>
+                </tr>
+                <tr>
+                    <th>Admin</th>
+                    <th><span id="sales-admin"></span></th>
+                </tr>
+            </thead>
+        </table>
+        <div style="border-bottom: 2px solid black;width:100%"></div>
+        <table class="table table-sm table-borderless mt-3">
+            <thead>
+                <tr>
+                    <th>Prd name</th>
+                    <th>Disc</th>
+                    <th><span class="float-end">Total</span></th>
+                </tr>
+            </thead>
+            <tbody id="sales-record">
+                <tr>
+                    <td><b>Total</b></td>
+                    <td></td>
+                    <td><span class="float-end" id="subtotal"></span></td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="border-bottom: 2px solid black;width:100%"></div>
+        <table class="table table-sm table-borderless mt-3">
+            <tr>
+                <td>Disc final</td>
+                <td></td>
+                <td><span class="float-end" id="disc-final"></span></td>
+            </tr>
+            <tr>
+                <td>Pajak</td>
+                <td></td>
+                <td><span class="float-end" id="tax"></span></td>
+            </tr>
+            <tr>
+                <td>GRAND TOTAL</td>
+                <td></td>
+                <td><span class="float-end" id="grand-total"></span></td>
+            </tr>
+            <tr>
+                <td>Bayar</td>
+                <td></td>
+                <td><span class="float-end" id="total-received"></span></td>
+            </tr>
+            <tr>
+                <td>Kembalian</td>
+                <td></td>
+                <td><span class="float-end" id="total-returned"></span></td>
+            </tr>
+        </table>
+    </div>
+    <div style="text-align:center">Barang yang sudah dibeli</div>
+    <div style="text-align:center">Tidak dapat ditukar kembali</div>
+    <h5 style="text-align:center;font-weight:bold">TERIMA KASIH</h5>
+    <h5 style="text-align:center;font-weight:bold">ATAS KUNJUNGAN ANDA</h5>
+
+    <script src="../assets/jquery/jquery-1.9.0.min.js"></script>
+    <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../assets/js/require.js"></script>
+    <script>
+        ipcRenderer.on('load:print', (e, salesRecord, storeInfo, salesHeader, salesFooter) => {
+
+            loadPrintSales = () => {
+
+                $('#sales-record').prepend(salesRecord)
+                $('#subtotal').html(salesFooter.subTotal)
+                $('#store-name').html(storeInfo.name)
+                $('#store-address').html(storeInfo.address)
+                $('#store-tax-number').html(storeInfo.taxNumber)
+                $('#store-telp').html(storeInfo.telp)
+
+                //sales header
+                $('#date').html(`: ${salesHeader.date}`)
+                $('#sales-number').html(`: ${salesHeader.number}`)
+                $('#sales-admin').html(`: ${salesHeader.admin}`)
+
+                //sales footer
+                $('#disc-final').html(salesFooter.discountFinal)
+                $('#tax').html(salesFooter.tax)
+                $('#grand-total').html(salesFooter.grandTotal)
+                $('#total-received').html(salesFooter.totalCashReceived)
+                $('#total-returned').html(salesFooter.totalCashReturned)
+                return true
+            }
+
+            if(loadPrintSales()) {
+                ipcRenderer.send('print:sales-evidence', 'cashier')
+            }
+
+        })
+    </script>
+</body>
+</html>
