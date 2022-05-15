@@ -15,6 +15,12 @@ let toPdf
 let printPage
 let cashierWindow
 let salesModal
+let salesNum
+let printSalesPage
+let buyerModal
+ipcMain.on('sales-number', (e, msgSalesNumber) => {
+    salesNum = msgSalesNumber
+})
 mainWin = () => {
     mainWindow = new BrowserWindow({
         webPreferences: {
@@ -500,7 +506,30 @@ modalSales = (salesNumber, title, totalSales, buyerInfo) => {
             height = 400
             frameBoolVal = true
             titleBar = 'checkout'
-            content = `<h1>${titleBar}</h1>`
+            content = `<div class="table-responsive">
+                            <table class="table table-borderless mb-5">
+                                <tbody>
+                                    <tr>
+                                        <td>Total Belanja</td>
+                                        <td><input type="text" id="total-sales" style="text-align:right;font-size:20px;" class="form-control" disabled value="${totalSales}"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Diterima</td>
+                                        <td><input type="text" id="total-received" style="text-align:right;font-size:20px;" class="form-control" onkeyup="cashReturn()" autofocus></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr style="background-color:red;color:white">
+                                        <td><span style="font-size:18px;">Kembali</span></td>
+                                        <td><input type="hidden" id="total-returned" value="0"><span class="float-end" id="info-total-returned" style="font-size:20px;font-weight:bold">0</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>`
+                break;
+            //content = `<h1>${titleBar}</h1>`
     }
 
     salesModal = new BrowserWindow(
@@ -534,4 +563,197 @@ ipcMain.on('load:sales-modal', (e, msgSalesNumber, msgTitle, msgTotalSales, msgB
 ipcMain.on('update-success:sales-edit', () => {
     salesModal.close()
     cashierWindow.webContents.send('update-success:sales-edit')
+})
+
+ipcMain.on('print:sales', (e, msgTotalSales, msgTotalReceived, msgTotalReturned, msgBuyerInfo, msgDocId) => {
+    printSales(salesNum, msgTotalSales, msgTotalReceived, msgTotalReturned, msgBuyerInfo, msgDocId)
+})
+
+numberFormat = (number) => {
+    let numFormat = new Intl.NumberFormat('de-DE').format(number)
+    return numFormat
+}
+
+printSales = (salesNumber, totalSales, totalReceived, totalReturned, buyerInfo, docId) => {
+    printSalesPage = new BrowserWindow(
+        {
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false
+            },
+            autoHideMenuBar: true
+        }
+    )
+
+    let salesDate
+    let d = new Date()
+    let date = d.getDate().toString().padStart(2,0)
+    let month = d.getMonth().toString().padStart(2,0)
+    let year = d.getFullYear()
+    salesDate = `${date}/${month}/${year}`
+    
+
+    let storeInfo = {}
+    db.all(`select * from profil order by id asc limit 1`, (err, row) => {
+        if(err) throw err
+        if(row.length < 1) {
+            storeInfo.name = 'My Store'
+            storeInfo.address = 'Address'
+            storeInfo.taxNumber = ''
+            storeInfo.telp = ''
+            storeInfo.logo = 'shop.png'
+        } else {
+            storeInfo.name = row[0].store_name
+            storeInfo.address = row[0].store_address
+            if(row[0].store_tax_id == "" || row[0].store_tax_id == null) {
+                storeInfo.taxNumber = ""
+            } else {
+                storeInfo.taxNumber = `NPWP. ${row[0].store_tax_id}`
+            }
+            if(row[0].phone_number == "" || row[0].phone_number == null) {
+                storeInfo.telp = ""
+            } else {
+                storeInfo.telp = `| Telp. ${row[0].phone_number}`
+            }
+            if(row[0].logo == "") {
+                storeInfo.logo = 'shop.png'
+            } else {
+                storeInfo.logo = row[0].logo
+            }
+        }
+    })
+
+    let salesHeader = {
+        date: salesDate,
+        number: salesNumber,
+        buyerAddress: buyerInfo
+    }
+    
+    let salesRecord = ''
+    db.all(`select * from sales where invoice_number = '${salesNumber}'`, (err, rows) => {
+        if(err) throw err
+        if(rows.length < 1) {
+            console.log('no sales to print')
+        } else {
+            let subtotal = 0
+            salesHeader.admin = rows[0].sales_admin
+            rows.map( row => {
+                let discountPercent = row.discount_percent
+                let discountMoney = row.discount_money
+                let discountInfo
+                if(discountPercent == "" && discountMoney == "") {
+                    discountInfo = ""
+                } else if(discountPercent != "" && discountMoney == "") {
+                    discountInfo = `${discountPercent}%`
+                } else if(discountPercent != "" && discountMoney != "") {
+                    discountInfo = `${discountPercent}%+${numberFormat(discountMoney)}`
+                } else if(discountPercent == "" && discountMoney != "") {
+                    discountInfo = `${numberFormat(discountMoney)}`
+                }
+                subtotal+=parseFloat(row.total)
+                salesRecord += `<tr>
+                                    <td>${row.product_name} (${row.qty}x${numberFormat(row.price)})</td>
+                                    <td>${discountInfo}</td>
+                                    <td><span class="float-end">${numberFormat(row.total)}</span></td>
+                                </tr>`
+                salesFooter.subTotal = numberFormat(subtotal)
+            })
+        }
+    })
+
+    let salesFooter = {
+        grandTotal: numberFormat(totalSales),
+        totalCashReceived: numberFormat(totalReceived),
+        totalCashReturned: numberFormat(totalReturned)
+    }
+
+    db.all(`select * from discount_final where invoice_number = '${salesNumber}'`, (err, row) => {
+        if(err) throw err
+        if(row.length < 1) {
+            salesFooter.discountFinal = ''
+        } else {
+            let discountPercent = row[0].discount_percent
+            let discountMoney = row[0].discount_money
+            let discountFinalInfo
+            if(discountPercent == "" && discountMoney == "") {
+                discountFinalInfo == ""
+            } else if(discountPercent != "" && discountMoney == "") {
+                discountFinalInfo = `${discountPercent}%`
+            } else if(discountPercent != "" && discountMoney != "") {
+                discountFinalInfo = `${discountPercent}%+${numberFormat(discountMoney)}`
+            } else if(discountPercent == "" && discountMoney != "") {
+                discountFinalInfo = `${numberFormat(discountMoney)}`
+            }
+            salesFooter.discountFinal = discountFinalInfo
+        }
+        db.all(`select * from sales_tax where invoice_number = '${salesNumber}'`, (err, row) => {
+            if(err) throw err
+            if(row.length < 1) {
+                salesFooter.tax = ''
+            } else {
+                salesFooter.tax = numberFormat(row[0].total_tax)
+            }
+        })
+    })
+
+    remote.enable(printSalesPage.webContents)
+
+    printSalesPage.loadFile('windows/receipt.html')
+
+    printSalesPage.webContents.on('dom-ready', () => {
+        printSalesPage.webContents.send('load:print', salesRecord, storeInfo, salesHeader, salesFooter)
+    })
+
+}
+
+ipcMain.on('print:sales-evidence', (e, docId) => {
+            
+    switch(docId) {
+        case 'cashier' :
+            cashierWindow.webContents.send('load:blank-sales')
+            salesModal.close()
+            break;
+    }
+    
+    printSalesPage.webContents.print({
+        printBackground: true
+    }), () => {
+        db.run(`insert into sales_evidence_info(invoice_number, print_status) values('${salesNumber}', 'printed')`, err => {
+            if(err) throw err
+        })
+        printSalesPage.close()
+        salesNum = ""
+    }
+
+    printSalesPage.on('close', () => {
+        printSalesPage = null
+        salesNum = ""
+    })
+})
+
+modalBuyer = () => {
+    buyerModal = new BrowserWindow(
+        {
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false
+            },
+            autoHideMenuBar: true,
+            width: 300,
+            height: 400,
+            parent: cashierWindow,
+            modal: true,
+            resizeable: false,
+            title: ' Add Buyer/Customer'
+        }
+    )
+    remote.enable(buyerModal.webContents)
+    buyerModal.loadFile('modals/buyer-form.html')
+    buyerModal.on('close', () => {
+        cashierWindow.webContents.send('load:buyer-select')
+    })
+}
+
+ipcMain.on('load:buyer-form', () => {
+    modalBuyer()
 })
