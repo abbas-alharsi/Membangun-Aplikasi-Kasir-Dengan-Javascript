@@ -56,7 +56,7 @@ openSales = () => {
     $('#modal-new-sales').modal('hide')
     $('.sales-input').removeAttr('disabled')
     $('#btn-new-sales').prop('disabled', true)
-
+    ipcRenderer.send('sales-number', sales_number)
 }
 
 let prdCodeArray = []
@@ -242,6 +242,7 @@ totalSales = (sales_number) => {
                         let total_tax = row[0].total_tax
                         let net_total_sales = parseFloat(total_sales) + parseFloat(total_tax)
                         $('#total-and-tax, #info-total-sales').html(numberFormat(net_total_sales))
+                        $('#input-total-and-tax').val(net_total_sales)
                     }
                 })
             } else {
@@ -265,10 +266,12 @@ totalSales = (sales_number) => {
                     if(row.length < 1) {
                         let net_total_sales = parseFloat(total_sales) - parseFloat(total_discount_final)
                         $('#total-and-tax').html(numberFormat(net_total_sales))
+                        $('#input-total-and-tax').val(net_total_sales)
                     } else {
                         let total_tax = row[0].total_tax
                         let net_total_sales = (parseFloat(total_sales) - parseFloat(total_discount_final)) + parseFloat(total_tax)
                         $('#total-and-tax, #info-total-sales').html(numberFormat(net_total_sales))
+                        $('#input-total-and-tax').val(net_total_sales)
                     }
                 })
             }
@@ -334,6 +337,7 @@ salesModal = (title) => {
                 )
             } else {
                 ipcRenderer.send('load:sales-modal', sales_number, title, total_sales, buyer_address)
+				console.log(total_sales)
             }
         })
     } else {
@@ -359,4 +363,90 @@ ipcRenderer.on('update-success:sales-edit', () => {
     } else {
         totalSales(sales_number)
     }
+})
+
+$(document).scannerDetection(
+    {
+        timeBeforeScanTest: 200,
+        avgTimeByChar: 40,
+        endChar: [13],
+        onComplete: function(barcode) {
+            validScan = true
+            $('#product_code').val(barcode)
+            insertSales()
+        }
+    }
+)
+
+blankSales = () => {
+    $('#sales-number').val("")
+    $('#buyer-select').val("")
+    $('#buyer-id').val("")
+    $('#buyer-address').val("")
+    $('#po-number').val("")
+    $('#cash-kredit').val("")
+    $('#due-date').val("")
+    $('#term').val("")
+    $('#description').val("")
+
+    $('#info-sales-number').html("")
+    $('#info-buyer').html("")
+    $('#info-total-sales').html("")
+
+    $('#sales-data').html("")
+    $('#discount-final').html("")
+    $('#tax').html("")
+    $('#total-and-tax').html("")
+
+    $('.sales-input').attr('disabled', true)
+    $('#btn-new-sales').removeAttr('disabled')
+    $('#btn-new-sales').focus()
+}
+
+ipcRenderer.on('load:blank-sales', () => {
+    blankSales()
+})
+
+salesNumber = () => {
+    let query = `select max(substr(invoice_number, 7, 7)) as sales_number from sales`
+    db.all(query, (err, row) => {
+        if(err) throw err
+        let number
+        if(row[0].sales_number == null) {
+            number = 1
+        } else {
+            number = parseInt(row[0].sales_number)+1
+        }
+        let suffixNum = number.toString().padStart(7,0)
+        let d = new Date()
+        let month = d.getMonth().toString().padStart(2,0)
+        let year = d.getFullYear()
+        let salesNum = `${year}${month}${suffixNum}`
+        $('#sales-number').val(salesNum)
+        $('#btn-create-new-sales').focus()
+    })
+}
+
+loadBuyer = () => {
+    let query = `select * from buyers order by id desc`
+    db.all(query, (err, rows) => {
+        if(err) throw err
+        let options = `<option value="">Buyer/Customer</option>`
+        if(rows.length < 1) {
+            options+=''
+        } else {
+            rows.map(row => {
+                options+=`<option value="${row.name}">${row.name}</option>`
+            })
+        }
+        $('#buyer-select').html(options)
+    })
+}
+
+loadBuyerForm = () => {
+    ipcRenderer.send('load:buyer-form')
+}
+
+ipcRenderer.on('load:buyer-select', () => {
+    loadBuyer()
 })

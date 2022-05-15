@@ -9,6 +9,40 @@ ipcRenderer.on('load:tbody-tr', (e, content, titleBar, buyerInfo) => {
     switch(title) {
         case 'checkout' :
             $('#btn-submit').html(`<i class="fa fa-print"></i> Print`)
+            inputTotalReceived = IMask(
+                document.getElementById('total-received'),
+                {
+                    mask: 'num',
+                    blocks: {
+                        num: {
+                            mask: Number,
+                            thousandsSeparator: '.',
+                            scale: 3,
+                            radix: '.',
+                            mapToRadix: ['.'],
+                            padFractionalZeros: false,
+                            signed: false
+                        }
+                    }
+                }
+            )
+            inputTotalSales = IMask(
+                document.getElementById('total-sales'),
+                {
+                    mask: 'num',
+                    blocks: {
+                        num: {
+                            mask: Number,
+                            thousandsSeparator: '.',
+                            scale: 3,
+                            radix: '.',
+                            mapToRadix: ['.'],
+                            padFractionalZeros: false,
+                            signed: false
+                        }
+                    }
+                }
+            )
             break;
         case 'discount-final' :
             inputDiscountFinalMoney = IMask(
@@ -38,11 +72,20 @@ submitUpdate = () => {
         case 'discount-final' :
             submitDiscountFinal()
             break;
+        case 'checkout' :
+            printSales()
+            break;
         default :
             submitUpdateSales()
             break;
     }
 }
+
+$('#data').on('keydown','#total-received', function(e) {
+    if(e.keyCode == 13) {
+        printSales()
+    }
+})
 
 newDiscountFinal = () => {
     let total_sales = $('#total-sales').val()
@@ -187,4 +230,24 @@ submitDiscountFinal = () => {
             })
         }
     })
+}
+
+numberFormat = (number) => {
+    let numFormat = new Intl.NumberFormat('de-DE').format(number)
+    return numFormat
+}
+
+cashReturn = () => {
+    let totalSales = inputTotalSales.unmaskedValue
+    let totalReceived = inputTotalReceived.unmaskedValue
+    let totalReturned = totalReceived - totalSales
+    $('#info-total-returned').html(numberFormat(totalReturned))
+    $('#total-returned').val(totalReturned)
+}
+
+printSales = () => {
+    let totalSales = inputTotalSales.unmaskedValue
+    let totalReceived = inputTotalReceived.unmaskedValue
+    let totalReturned = totalReceived - totalSales
+    ipcRenderer.send('print:sales', totalSales, totalReceived, totalReturned, buyerAddress, 'cashier')
 }
