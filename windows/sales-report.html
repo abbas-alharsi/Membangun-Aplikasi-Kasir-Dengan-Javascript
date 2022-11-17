@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body id="sales-report" onload="setDate()">
+    <div class="toolbar">
+        <div class="toolbar-menu">
+            <div class="row">
+                <div class="col-xl-12">
+                    <div class="main-toolbar">
+                        <div class="row g-3">
+                            <div class="col-auto">
+                                <button class="btn btn-sm btn-light btn-light-bordered" title="Export PDF" onclick="exportData('pdf')"><i class="fa fa-file-pdf"></i> Export PDF</button>
+                            </div>
+                            <div class="col-auto">
+                                <select name="" id="report-span" class="form-select form-select-sm" onchange="changeDate()">
+                                    <option value="monthly">Per Bulan</option>
+                                    <option value="annual">Per Tahun</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="padding: 20px 20px">
+        <div class="row">
+            <div class="col-12">
+                <div class="box">
+                    <div class="box-header with-border">
+                        <div class="row">
+                            <div class="col-auto" style="font-size: 15px; color: grey">
+                                <i class="fa fa-clipboard"></i> Laporan Penjualan
+                            </div>
+                            <div class="col-auto">
+                                <div class="float-end">
+                                    <select class="form-select form-select-sm mb-2" id="start-month" onchange="changeDate()">
+                                        <option value="01">Januari</option>
+                                        <option value="02">Februari</option>
+                                        <option value="03">Maret</option>
+                                        <option value="04">April</option>
+                                        <option value="05">Mei</option>
+                                        <option value="06">Juni</option>
+                                        <option value="07">Juli</option>
+                                        <option value="08">Agustus</option>
+                                        <option value="09">September</option>
+                                        <option value="10">Oktober</option>
+                                        <option value="11">November</option>
+                                        <option value="12">Desember</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <select class="form-select form-select-sm mb-2" id="start-year" onchange="changeDate()">
+								        <option value="2022">2022</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="box-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-borderless table-hover">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Bulan/Tanggal</th>
+                                        <th><span class="float-end">Penjualan</span></th>
+                                        <th><span class="float-end">Potongan</span></th>
+                                        <th><span class="float-end">Penjualan Bersih</span></th>
+                                        <th><span class="float-end">Harga Pokok Penjualan</span></th>
+                                        <th><span class="float-end">Profit</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="data">
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover table-striped" style="font-size: 13px">
+                                <tbody>
+                                    <tr>
+                                        <td><span class="float-end">Total Penjualan Bersih</span></td>
+                                        <td>: </td>
+                                        <td><span class="float-end"><b id="net-total-sales"></b></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="float-end">Total HPP</span></td>
+                                        <td>: </td>
+                                        <td><span class="float-end"><b id="total-cogs"></b></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="float-end">Total Profit</span></td>
+                                        <td>: </td>
+                                        <td><span class="float-end"><b id="total-profit"></b></span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../assets/jquery/jquery-1.9.0.min.js"></script>
+    <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../assets/js/require.js"></script>
+    <script src="../assets/js/toolbar.js"></script>
+    <script src="../assets/js/sales-report.js"></script>
+    <script src="../assets/js/main.js"></script>
+</body>
+</html>

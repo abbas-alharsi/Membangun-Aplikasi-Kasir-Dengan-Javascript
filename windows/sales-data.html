@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body id="sales">
+    <div class="toolbar">
+        <div class="toolbar-menu">
+            <div class="row">
+                <div class="col-xl-12">
+                    <div class="main-toolbar">
+                        <div class="row g-3">
+                            <div class="col-auto">
+                                <select name="" id="row_per_page" class="form-select form-select-sm">
+                                    <option value="2">2</option>
+                                    <option value="50">50</option>
+                                    <option value="75">75</option>
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <div class="input-group" id="search-input-group">
+                                    <input type="text" class="form-control form-control-sm" id="search-data" name="search-data" placeholder="Search">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-sm btn-light btn-light-bordered" id="btn-search-data"><i class="fa fa-search"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="pagination" class="col-auto">
+                                <div class="btn-group btn-group-sm">
+                                    <div class="btn-group btn-group-sm me-1">
+                                        <a href="#" class="btn btn-sm btn-light btn-light-bordered" id="first-page"><i class="fa fa-step-backward"></i></a>
+                                        <a href="#" class="btn btn-sm btn-light btn-light-bordered" id="prev-page"><i class="fa fa-backward"></i></a>
+                                    </div>
+                                    <div class="input-group input-group-sm me-1">
+                                        <input type="text" class="form-control form-control-sm" id="page_number" value="1">
+                                        <input type="text" class="form-control form-control-sm" id="total_pages" readonly>
+                                    </div>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="#" class="btn btn-sm btn-light btn-light-bordered" id="next-page"><i class="fa fa-forward"></i></a>
+                                        <a href="#" class="btn btn-sm btn-light btn-light-bordered" id="last-page"><i class="fa fa-step-forward"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="main-table">
+        <div style="padding: 20px 20px 20px 20px">
+            <div class="row">
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered" style="font-size: 13px">
+                            <thead class="thead-light" id="col-head">
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Tanggal</th>
+                                    <th>Nomor Penjualan</th>
+                                    <th>Nama Produk</th>
+                                    <th>Kode Produk</th>
+                                    <th>Harga</th>
+                                    <th>Qty</th>
+                                    <th>Satuan</th>
+                                    <th>Potongan</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="data">
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../assets/jquery/jquery-1.9.0.min.js"></script>
+    <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../assets/js/require.js"></script>
+    <script src="../assets/js/toolbar.js"></script>
+    <script src="../assets/js/sales-data.js"></script>
+    <script src="../assets/js/main.js"></script>
+</body>
+</html>
