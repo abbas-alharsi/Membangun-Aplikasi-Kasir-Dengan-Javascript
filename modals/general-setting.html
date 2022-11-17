@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body style="background-color: #F0F3F4">
+    <div class="container mt-3">
+        <div class="row">
+            <div class="col-12">
+                <div class="box">
+                    <div class="box-header with-border">
+                        <h6>Pajak</h6>
+                    </div>
+                    <div class="box-body">
+                        <table class="table-borderless mb-2">
+                            <tbody>
+                                <tr>
+                                    <td>Persentase</td>
+                                    <td>: <span id="tax-percentage"></span><input type="text" style="display:none" id="input-tax-percentage"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button class="btn btn-sm btn-secondary" style="display:none" onclick="hideInputTax()" id="btn-cancel-tax">Cancel</button>
+                        <button class="btn btn-sm btn-primary" style="display:none" id="btn-submit-tax" onclick="submitTaxPercentage()">Submit</button>
+                        <button class="btn btn-sm btn-light btn-light-bordered" onclick="showInputTax()" id="btn-edit-tax">Change</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../assets/jquery/jquery-1.9.0.min.js"></script>
+    <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../assets/js/require.js"></script>
+    <script>
+        ipcRenderer.on('load:config', (e, taxPercentage) => {
+            $('#tax-percentage').html(`${taxPercentage}%`)
+        })
+        showInputTax = () => {
+            $('#btn-submit-tax, #btn-cancel-tax, #input-tax-percentage').css('display','initial')
+            $('#btn-edit-tax, #tax-percentage').css('display','none')
+            db.all(`select * from tax where tax_name = 'pajak' and id = 1`, (err, row) => {
+                if(err) throw err
+                if(row.length < 1) {
+                    $('#input-tax-percentage').val("")
+                } else {
+                    $('#input-tax-percentage').val(row[0].percentage)
+                }
+            })
+        }
+        hideInputTax = () => {
+            $('#btn-submit-tax, #btn-cancel-tax, #input-tax-percentage').css('display','none')
+            $('#btn-edit-tax, #tax-percentage').css('display','initial')
+        }
+
+        submitTaxPercentage = () => {
+            let taxVal = $('#input-tax-percentage').val()
+            let query = `update tax set percentage = ${taxVal} where id = 1 and tax_name = 'pajak'`
+            db.run(query, err => {
+                if(err) throw err
+                hideInputTax()
+                $('#tax-percentage').html(`${taxVal}%`)
+            })
+        }
+    </script>
+</body>

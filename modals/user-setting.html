@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body style="background-color: #F0F3F4" id="user-setting">
+    <div class="container mt-3">
+        <div class="row">
+            <div class="col-12">
+                <div class="box">
+                    <div class="box-header with-border">
+                        <h6>Admin</h6>
+                    </div>
+                    <div class="box-body">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Username</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin">
+
+                            </tbody>
+                        </table>
+                        <button class="btn btn-sm btn-light btn-light-bordered float-end" id="btn-add-admin" onclick="addAdmin()"><i class="fa fa-plus"></i> Tambah admin</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row" id="main-user-row">
+            <div class="col-12">
+                <div class="box">
+                    <div class="box-header with-border">
+                        <h6>Main User</h6>
+                    </div>
+                    <div class="box-body">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Username</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="main-user">
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../assets/jquery/jquery-1.9.0.min.js"></script>
+    <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../assets/js/require.js"></script>
+    <script>
+        let userId
+        let userAccessLevel
+        getData = (userId, userAccessLevel) => {
+            let queryDataAdmin = `select * from users where access_level = 'admin' and id=${userId}`
+            let queryDataMainUser = `select * from users where access_level = 'main_user'`
+            switch(userAccessLevel) {
+                case 'admin':
+                    $('#main-user-row').html("")
+                    $('#btn-add-admin').css('display','none')
+                    db.all(queryDataAdmin, (err, row) => {
+                        if(err) throw err
+                        if(row.length < 1) {
+                            $('#admin').html("")
+                        } else {
+                            let tr = `<tr>
+                                        <td>${row[0].id}</td>
+                                        <td>${row[0].username}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-light btn-light-bordered float-end" title="edit username" onclick="editUsername('${row[0].username}', ${row[0].id})"><i class="fa fa-edit"></i></button>
+                                            <button class="btn btn-sm btn-light btn-light-bordered float-end me-1" title="edit profile" onclick="editProfile(${row[0].id})"><i class="fa fa-user"></i></button>
+                                            <button class="btn btn-sm btn-light btn-light-bordered float-end me-1" title="edit password" onclick="editPassword(${row[0].id})"><i class="fa fa-key"></i></button> 
+                                        </td> 
+                                    </tr>`
+                                $('#admin').html(tr)
+                        }
+                    })
+                    break
+                default:
+                    db.all(`select * from users where access_level = 'admin'`, (err, rows) => {
+                        if(err) throw err
+                        if(rows.length < 1) {
+                            $('#admin').html("")
+                        } else {
+                            let tr = ''
+                            rows.map( row => {
+                                tr+=`<tr>
+                                        <td>${row.id}</td>
+                                        <td>${row.username}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-light btn-light-bordered float-end" title="edit username" onclick="editUsername('${row.username}', ${row.id})"><i class="fa fa-edit"></i></button>
+                                            <button class="btn btn-sm btn-light btn-light-bordered float-end me-1" title="edit profile" onclick="editProfile(${row.id})"><i class="fa fa-user"></i></button>
+                                            <button class="btn btn-sm btn-light btn-light-bordered float-end me-1" title="edit password" onclick="editPassword(${row.id})"><i class="fa fa-key"></i></button> 
+                                        </td> 
+                                    </tr>`
+                            })
+                            $('#admin').html(tr)
+                        }
+                    })
+
+                    db.all(queryDataMainUser, (err, row) => {
+                        if(err) throw err
+                        if(row.length < 1) {
+                            $('#main-user').html("")
+                        } else {
+                            let tr = `<tr>
+                                        <td>${row[0].id}</td>
+                                        <td>${row[0].username}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-light btn-light-bordered float-end" title="edit username" onclick="editUsername('${row[0].username}', ${row[0].id})"><i class="fa fa-edit"></i></button>
+                                            <button class="btn btn-sm btn-light btn-light-bordered float-end me-1" title="edit profile" onclick="editProfile(${row[0].id})"><i class="fa fa-user"></i></button>
+                                            <button class="btn btn-sm btn-light btn-light-bordered float-end me-1" title="edit password" onclick="editPassword(${row[0].id})"><i class="fa fa-key"></i></button> 
+                                        </td> 
+                                    </tr>`
+                            $('#main-user').html(tr)
+                        }
+                    })
+                    break
+            }
+        }
+        ipcRenderer.on('load:data', (e, id, accessLevel) => {
+            userId = id
+            userAccessLevel = accessLevel
+            getData(userId, userAccessLevel)
+        })
+        let docId = $('body').attr('id')
+        addAdmin = () => {
+            let editForm = `<div class="form-group mb-2">
+                                <input type="text" class="form-control form-control-sm" id="first-name" placeholder="Nama depan" autofocus>
+                            </div>
+                            <div class="form-group mb-2">
+                                <input type="text" class="form-control form-control-sm" id="last-name" placeholder="Nama akhir">
+                            </div>
+                            <div class="form-group mb-2">
+                                <input type="text" class="form-control form-control-sm" id="position" placeholder="Posisi">
+                            </div>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text"><i class=" fa fa-user"></i></span>
+                                <input type="text" class="form-control form-control-sm" id="username" placeholder="Username">
+                            </div>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text"><i class=" fa fa-key"></i></span>
+                                <input type="text" class="form-control form-control-sm" id="password" placeholder="Password">
+                            </div>
+                            <button class="btn btn-sm btn-primary mt-3" onclick="submitAdmin()"><i class="fa fa-paper-plane"></i> Submit</button>`
+            ipcRenderer.send('load:edit', docId, editForm, 300, 300)
+        }
+        ipcRenderer.on('success:update-user', () => {
+            dialog.showMessageBoxSync(
+                {
+                    title: 'Update Success',
+                    type: 'info',
+                    message: 'User data updated'
+                }
+            )
+            getData(userId, userAccessLevel)
+        })
+        editUsername = (username, id) => {
+            let editForm = `<div class="input-group">
+                                <span class="input-group-text"><i class="fa fa-user"></i></span>
+                                <input type="text" class="form-control form-control-sm" placeholder="Username baru" id="new-username" required autofocus>
+                                <input type="hidden" value="${username}" id="prev-username">
+                            </div>
+                            <button class="btn btn-sm btn-primary mt-2" onclick="submitEditUsername('${username}', ${id})" ><i class="fa fa-paper-plane"></i> Submit</button>`
+            ipcRenderer.send('load:edit', docId, editForm, 300, 150)
+        }
+        editPassword = (id) => {
+            let editForm = `<div class="input-group mb-2">
+                                <span class="input-group-text"><i class="fa fa-key"></i></span>
+                                <input type="text" class="form-control form-control-sm" placeholder="Password saat ini" id="prev-password" required autofocus>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa fa-key"></i></span>
+                                <input type="text" class="form-control form-control-sm" placeholder="Password baru" id="new-password" required>
+                            </div>
+                            <button class="btn btn-sm btn-primary mt-2" onclick="submitEditPassword(${id})"><i class="fa fa-paper-plane"></i> Submit</button>`
+            ipcRenderer.send('load:edit', docId, editForm, 300, 200)
+        }
+
+    editProfile = (id) => {
+        db.all(`select * from users where id=${id}`, (err, row) => {
+            if(err) throw err
+            let editForm
+            if(row.length < 1) {
+                dialog.showMessageBoxSync(
+                    {
+                        title: 'Alert',
+                        type: 'info',
+                        message: 'Tidak terdapat record untuk user ini'
+                    }
+                )
+            } else {
+                let firstName
+                let lastName
+                let position
+                let phoneNumber
+                let employeeNumber
+                let employementStatus
+
+                if(row[0].first_name != null) {
+                    firstName = row[0].first_name
+                } else {
+                    firstName = ""
+                }
+                if(row[0].last_name != null) {
+                    lastName = row[0].last_name
+                } else {
+                    lastName = ""
+                }
+                if(row[0].position != null) {
+                    position = row[0].position
+                } else {
+                    position = ""
+                }
+                if(row[0].phone_number != null) {
+                    phoneNumber = row[0].phone_number
+                } else {
+                    phoneNumber = ""
+                }
+                if(row[0].employee_number != null) {
+                    employeeNumber = row[0].employee_number
+                } else {
+                    employeeNumber = ""
+                }
+                if(row[0].status != null) {
+                    employementStatus = row[0].status
+                } else {
+                    employementStatus = ""
+                }
+
+                editForm = `<input type="text" class="form-control form-control-sm mb-2" id="first-name" placeholder="Nama Depan" value="${firstName}">
+                            <input type="text" class="form-control form-control-sm mb-2" id="last-name" placeholder="Nama Akhir" value="${lastName}">
+                            <input type="text" class="form-control form-control-sm mb-2" id="position" placeholder="Posisi" value="${position}">
+                            <input type="text" class="form-control form-control-sm mb-2" id="phone-number" placeholder="Nomor Telp" value="${phoneNumber}">
+                            <input type="text" class="form-control form-control-sm mb-2" id="employee-number" placeholder="Nomor Pegawai" value="${employeeNumber}">
+                            <input type="text" class="form-control form-control-sm mb-2" id="status" placeholder="Status kepegawaian" value="${employementStatus}">
+                            <button class="btn btn-sm btn-primary" onclick="submitEditProfile(${id})"><i class="fa fa-paper-plane"></i> Submit</button>`
+                ipcRenderer.send('load:edit', docId, editForm, 300, 470)
+            }
+        })
+    }
+    </script>
+</body>

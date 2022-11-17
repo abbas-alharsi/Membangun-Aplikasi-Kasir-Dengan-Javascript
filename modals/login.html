@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+    <div class="container">
+        <div class="row mt-2">
+            <div class="col-auto">
+                <div class="input-group mb-2">
+                    <span class="input-group-text">@</span>
+                    <input type="text" class="form-control form-control-sm" id="username" placeholder="Username" autofocus>
+                </div>
+                <div class="input-group mb-2">
+                    <span class="input-group-text"><i class="fa fa-key"></i></span>
+                    <input type="password" class="form-control form-control-sm" id="password" placeholder="Password">
+                </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-sm btn-primary" onclick="login()"><i class="fa fa-sign-in"></i> Login</button>
+                    <button class="btn btn-sm btn-light btn-light-bordered" onclick="closeApp()"><i class="fa fa-times"></i> Close</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <script src="../assets/jquery/jquery-1.9.0.min.js"></script>
+    <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../assets/js/require.js"></script>
+    <script>
+        login = () => {
+            let username = $('#username').val()
+            let password = $('#password').val()
+            db.all(`select * from users where username = '${username}' and password = '${password}'`, (err, row) => {
+                if(err) throw err
+                if(row.length < 1) {
+                    dialog.showErrorBox('Invalid username/password', 'username dan password tidak sesuai, silahkan coba kembali')
+                } else {
+                    $('#username, #password').val("")
+                    $('#username').focus()
+                    ipcRenderer.send('success:login', row[0].id, row[0].first_name, row[0].position, row[0].access_level)
+                }
+            })
+        }
+        $('#username, #password').keydown(function(e) {
+            if(e.keyCode == 13) {
+                login()
+            }
+        })
+        closeApp = () => {
+            ipcRenderer.send('close:app')
+        }
+    </script>
+</body>
