@@ -92,7 +92,7 @@ executeEditPrdData = (rowId) => {
             type: 'info',
             message: 'Harga pokok/beli harus diisi'
         })
-    } else if(prdPrice < prdCost) {
+    } else if(parseInt(prdPrice) < parseInt(prdCost)) {
         dialog.showMessageBoxSync({
             title: 'Alert',
             type: 'info',

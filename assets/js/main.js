@@ -6,6 +6,9 @@ total_page = (total_row_displayed, searchVal = "") => {
         case 'product-data':
             totalPrdPage(total_row_displayed, searchVal);
             break;
+        case 'buyer-data':
+            totalBuyerPage(total_row_displayed, searchVal)
+            break
     }
 }
 
@@ -14,6 +17,12 @@ load_data = (page_number, total_row_displayed, searchVal = "") => {
         case 'product-data' :
             loadProduct(page_number, total_row_displayed, searchVal);
             break;
+        case 'sales' :
+            loadSales(page_number, total_row_displayed, searchVal)
+            break;
+        case 'buyer-data':
+            loadBuyer(page_number, total_row_displayed, searchVal)
+            break
     }
 }
 let page_number = $('#page_number').val()
@@ -28,13 +37,19 @@ deleteRecord = (id) => {
         case 'product-data':
             table='products'
             break;
+        case 'buyer-data':
+            table='buyers'
+            break
     }
     let sql = `delete from ${table} where id = ${id}`
     db.run(sql, err => {
         if(err) {
             console.log(err)
         } else {
-            load_data()
+            let page_number = $('#page_number').val()
+            let total_row_displayed = $('#row_per_page').val()
+            let searchVal = $('#search-data').val()
+            load_data(page_number, total_row_displayed, searchVal)
         }
     })
 }
@@ -46,6 +61,9 @@ deleteAllRecords = () => {
         case 'product-data':
             table = 'products';
             break;
+        case 'buyer-data':
+            table='buyers'
+            break
     }
 
     let sql = `delete from ${table}`
@@ -53,7 +71,10 @@ deleteAllRecords = () => {
         if(err) {
             console.log(err)
         } else {
-            load_data()
+            let page_number = $('#page_number').val()
+            let total_row_displayed = $('#row_per_page').val()
+            let searchVal = $('#search-data').val()
+            load_data(page_number, total_row_displayed, searchVal)
         }
     })
 }
@@ -65,13 +86,19 @@ deleteMultipleRecords = (ids) => {
         case 'product-data':
             table = 'products';
             break;
+        case 'buyer-data':
+            table='buyers'
+            break
     }
     let sql = `delete from ${table} where id IN(${ids})`
     db.run(sql, err => {
         if(err) {
             console.log(err)
         } else {
-            load_data()
+            let page_number = $('#page_number').val()
+            let total_row_displayed = $('#row_per_page').val()
+            let searchVal = $('#search-data').val()
+            load_data(page_number, total_row_displayed, searchVal)
         }
     })
 }
@@ -90,6 +117,9 @@ editRecord = (id) => {
         case 'product-data':
             editPrdData(id)
             break;
+        case 'buyer-data':
+            editBuyerData(id)
+            break
     }
 }
 

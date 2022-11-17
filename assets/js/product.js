@@ -105,8 +105,8 @@ function loadProduct(page_number, total_row_displayed, searchVal) {
                             <td>${row.barcode}</td>
                             <td>${row.category}</td>
                             <td>${row.unit}</td>
-                            <td>${row.selling_price}</td>
-                            <td>${row.cost_of_product}</td>
+                            <td>${numberFormat(row.selling_price)}</td>
+                            <td>${numberFormat(row.cost_of_product)}</td>
                             <td>${row.product_initial_qty}</td>
                             <td>
                                 <button class="btn btn-sm btn-light btn-light-bordered" onclick="editRecord(${row.id})" id="edit-data"><i class="fa fa-edit"></i></button>
@@ -171,7 +171,8 @@ insertProduct = () => {
                                 if(err) throw err
                                 blankForm()
                                 $('#product_name').focus()
-                                load_data()
+                                let total_row_displayed = $('#row_per_page').val()
+                                load_data(1, total_row_displayed)
                             })
                         })
                     })
@@ -207,6 +208,7 @@ loadUnitOptions = () => {
         rows.map( (row) => {
             option+=`<option value="${row.unit}">${row.unit}</option>`
         })
+        console.log(option)
 
         $('#product_unit').html(option)
     })
@@ -219,6 +221,7 @@ function selectUnitOption(unitOpt, unit) {
 function selectCategoryOption(categoryOpt, category) {
     let options = categoryOpt.replace(`value="${category}">`, `value="${category}" selected>`)
     return options
+    console.log(options)
 }
 editPrdData = (id) => {
     let sqlUnit = `select * from units`
@@ -235,6 +238,7 @@ editPrdData = (id) => {
                 unitOpts +=`<option value="${item.unit}">${item.unit}</option>`
             })
             unitOption = unitOpts
+            console.log(unitOption)
             db.all(sqlCategory, (err, result) => {
                 if(err) {
                     throw err
@@ -294,9 +298,10 @@ editPrdData = (id) => {
 
 ipcRenderer.on('update:success', (e, msg) => {
     alertSuccess(msg)
-    load_data()
+    let page_number = $('#page_number').val()
+    let total_row_displayed = $('#row_per_page').val()
+    load_data(page_number, total_row_displayed)
 })
-
 exportCsvPrdData = (filePath, ext, joinIds = false) => {
     let sql
     let file_path = filePath.replace(/\\/g,'/')

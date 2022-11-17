@@ -4,7 +4,6 @@ ipcRenderer.on('res:form', (e, editDocId, editForm, rowId) => {
     $('#edit-form').html(editForm)
     doc_id = editDocId
     id = rowId
-    console.log(editForm)
 })
 
 submitEditData = () => {
