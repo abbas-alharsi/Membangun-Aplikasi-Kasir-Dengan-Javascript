@@ -10,7 +10,7 @@
 </head>
 <body style="background-color: #F2F3F4;">
     <nav class="navbar navbar-dark bg-dark fixed-top">
-        <div style="display: inline-block; color: aliceblue;"><span id="store-name" class="ms-2" style="font-size: 14.5px;">My store</span></div>
+        <div style="display: inline-block; color: aliceblue;"><img id="store-logo" src="" width="30" height="30"><span id="store-name" class="ms-2" style="font-size: 14.5px;">My store</span></div>
         <div style="display: inline-block;">
             <div class="dropdown" style="display: inline;">
                 <a href="#" class="btn btn-sm btn-primary" id="userInfoDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -41,16 +41,16 @@
                     <i class="fa fa-cog"></i>
                 </a>
                 <div class="dropdown-menu dropdown-menu-end dropdown-light" style="font-size: 14px;" aria-labelledby="settingDropdown">
-                    <a class="dropdown-item" id="general-setting" href="#"><i class="fa fa-cogs"></i> Pengaturan Umum</a>
+                    <a class="dropdown-item" id="general-setting" onclick="setting('general')" href="#"><i class="fa fa-cogs"></i> Pengaturan Umum</a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" id="user-setting" href="#"><i class="fa fa-users"></i> Pengaturan Admin/User</a>
+                    <a class="dropdown-item" id="user-setting" onclick="setting('user')" href="#"><i class="fa fa-users"></i> Pengaturan Admin/User</a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" id="store-profile-setting" href="#"><i class="fa fa-building"></i> Profil Toko</a>
+                    <a class="dropdown-item" id="store-profile-setting" onclick="setting('profil')" href="#"><i class="fa fa-building"></i> Profil Toko</a>
                 </div>
             </div>
-            <button class="btn btn-sm btn-secondary"><i class="fa fa-sign-out-alt"></i></button>
-            <button class="btn btn-sm btn-secondary"><i class="fa fa-window-minimize"></i></button>
-            <button class="btn btn-sm btn-danger me-2"><i class="fa fa-times"></i></button>
+            <button class="btn btn-sm btn-secondary" onclick="logout()"><i class="fa fa-sign-out-alt"></i></button>
+            <button class="btn btn-sm btn-secondary" onclick="winMinimize()"><i class="fa fa-window-minimize"></i></button>
+            <button class="btn btn-sm btn-danger me-2" onclick="winClose()"><i class="fa fa-times"></i></button>
         </div>
     </nav>
     <div style="padding:70px 20px 20px 20px">
@@ -65,7 +65,7 @@
             </div>
             <div class="col-md-3 me-2">
                 <div class="box-menu">
-                    <a href="#" class="menu-link">
+                    <a href="#" class="menu-link" onclick="salesData()">
                         <img src="./assets/images/icons/grocery-cart.png" alt="">
                     </a>
                     <div class="box-menu-title">Data Penjualan</div>
@@ -73,7 +73,7 @@
             </div>
             <div class="col-md-3">
                 <div class="box-menu">
-                    <a href="#" class="menu-link">
+                    <a href="#" class="menu-link" onclick="salesReport()">
                         <img src="./assets/images/icons/report.png" alt="">
                     </a>
                     <div class="box-menu-title">Laporan Penjualan</div>
@@ -83,7 +83,7 @@
         <div class="d-flex justify-content-center">
             <div class="col-md-3 me-2">
                 <div class="box-menu">
-                    <a href="#" class="menu-link">
+                    <a href="#" class="menu-link" onclick="chart()">
                         <img src="./assets/images/icons/analytics.png" alt="">
                     </a>
                     <div class="box-menu-title">Grafik</div>
@@ -99,7 +99,7 @@
             </div>
             <div class="col-md-3">
                 <div class="box-menu">
-                    <a href="#" class="menu-link">
+                    <a href="#" class="menu-link" onclick="buyer()">
                         <img src="./assets/images/icons/users.png" alt="">
                     </a>
                     <div class="box-menu-title">Data Customer/Buyer</div>
@@ -119,6 +119,70 @@
 
         cashier = () => {
             ipcRenderer.send('load:cashier-window')
+        }
+
+        salesData = () => {
+            ipcRenderer.send('load:sales-data-window')
+        }
+
+        salesReport = () => {
+            ipcRenderer.send('load:sales-report-window')
+        }
+
+        chart = () => {
+            ipcRenderer.send('load:chart-window')
+        }
+
+        buyer = () => {
+            ipcRenderer.send('load:buyer-window')
+        }
+        setting = (param) => {
+            ipcRenderer.send('load:setting', param)
+        }
+        winMinimize = () => {
+            ipcRenderer.send('window:minimize')
+        }
+        winClose = () => {
+            ipcRenderer.send('window:close')
+        }
+        ipcRenderer.on('load:overlay', (e, storeObject) => {
+            let overlay = `<div class="overlay"></div>`
+            $('body').prepend(overlay)
+            $('#store-name').html(storeObject.name)
+            if(storeObject.logo == null || storeObject.logo == "") {
+                $('#store-logo').attr('src', `./assets/images/logo/shop.png`)
+            } else {
+                $('#store-logo').attr('src',`./assets/images/logo/${storeObject.logo}`)
+            }
+        })
+        unCurtain = (storeObject, userFirstName, userPosition, userAccessLevel) => {
+            $('.overlay').addClass('out')
+            $('.overlay').removeClass('in')
+            $('#store-name').html(storeObject.name)
+            $('#userFirstName').html(userFirstName)
+            $('#userPosition').html(userPosition)
+            $('#userAccessLevel').html(userAccessLevel)
+            switch(userAccessLevel) {
+                case 'main_user':
+                    $('#general-setting, #store-profil-setting').removeClass('disabled')
+                    break
+                default:
+                    $('#general-setting, #store-profil-setting').addClass('disabled')
+                    break
+            }
+            if(storeObject.logo == null || storeObject.logo == "") {
+                $('#store-logo').attr('src', `./assets/images/logo/shop.png`)
+            } else {
+                $('#store-logo').attr('src',`./assets/images/logo/${storeObject.logo}`)
+            }
+        }
+        ipcRenderer.on('unlock:app', (e, storeObject, userId, firstName, position, accessLevel) => {
+            unCurtain(storeObject, firstName, position, accessLevel)
+        })
+        logout = () => {
+            $('.overlay').addClass('in')
+            $('.overlay').removeClass('out')
+            ipcRenderer.send('submit:logout')
         }
     </script>
 </body>

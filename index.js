@@ -7,7 +7,7 @@ const path = require('path')
 const url = require('url')
 const md5 = require('md5')
 remote.initialize()
-
+console.log(path.join(app.getPath('userData'),'system/db'))
 let mainWindow
 let productWindow
 let editDataModal
@@ -18,6 +18,166 @@ let salesModal
 let salesNum
 let printSalesPage
 let buyerModal
+let salesWindow
+let salesReportWindow
+let chartWindow
+let buyerWindow
+let generalSettingModal
+let userSettingModal
+let profilSettingModal
+let loginModal
+let login = false
+let firstName
+let userId
+let position
+let accessLevel
+let storeObject = {}
+let configTableModal
+
+ipcMain.on('success:login', (e, msgUserId, msgFirstName, msgPosition, msgAccessLevel) => {
+    login = true
+    firstName = msgFirstName
+    position = msgPosition
+    userId = msgUserId
+    accessLevel = msgAccessLevel
+    mainWindow.webContents.send('unlock:app', storeObject, msgUserId, firstName, position, accessLevel)
+    loginModal.hide()
+})
+ipcMain.on('submit:logout', () => {
+    loginModal.show()
+})
+modalTableConfig = () => {
+    configTableModal = new BrowserWindow({
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation:false
+        },
+        width: 300,
+        height: 150,
+        parent: mainWindow,
+        modal: true,
+        autoHideMenuBar: true,
+        frame: false,
+        minimizable: false,
+        maximizable: false,
+        resizable: false
+    })
+    configTableModal.loadFile('modals/config-table.html')
+    configTableModal.on('close', (e) => {
+        e.preventDefault()
+    })
+    configTableModal.on('minimize', (e) => {
+        e.preventDefault()
+    })
+    configTableModal.on('maximize', (e) => {
+        e.preventDefault()
+    })
+}
+modalLogin = () => {
+    loginModal = new BrowserWindow({
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation:false
+        },
+        width: 250,
+        height: 180,
+        parent: mainWindow,
+        modal: true,
+        autoHideMenuBar: true,
+        frame: false,
+        minimizable: false,
+        maximizable: false,
+        resizable: false
+    })
+    db.all(`select * from profil where id = 1 order by id asc`, (err, row) => {
+        if(err) throw err
+        storeObject.name = row[0].store_name
+        storeObject.logo = row[0].logo
+    })
+    loginModal.loadFile('modals/login.html')
+    remote.enable(loginModal.webContents)
+    loginModal.webContents.on('did-finish-load', () => {
+        loginModal.focus()
+    })
+}
+
+modalGeneralSetting = () => {
+    generalSettingModal = new BrowserWindow(
+        {
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false
+            },
+            autoHideMenuBar: true,
+            title: 'Pengaturan Umum',
+            parent: mainWindow,
+            modal: true,
+            width: 500,
+            height: 540,
+            resizable: false,
+            minimizable: false
+        }
+    )
+    generalSettingModal.loadFile('modals/general-setting.html')
+    let taxPercentage
+    db.all(`select * from tax where tax_name = 'pajak' and id = 1`, (err, row) => {
+        if(err) throw err
+        if(row.length < 1) {
+            taxPercentage = ''
+        } else {
+            taxPercentage = row[0].percentage
+        }
+    })
+
+    remote.enable(generalSettingModal.webContents)
+    generalSettingModal.webContents.on('dom-ready', () => {
+        generalSettingModal.webContents.send('load:config', taxPercentage)
+    })
+}
+modalUserSetting = () => {
+    userSettingModal = new BrowserWindow(
+        {
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false
+            },
+            autoHideMenuBar: true,
+            title: 'Pengaturan Admin/User',
+            parent: mainWindow,
+            modal: true,
+            width: 500,
+            height: 540,
+            resizable: false,
+            minimizable: false
+        }
+    )
+    userSettingModal.loadFile('modals/user-setting.html')
+
+    remote.enable(userSettingModal.webContents)
+    userSettingModal.webContents.on('dom-ready', () => {
+        userSettingModal.webContents.send('load:data', userId, accessLevel)
+    })
+}
+modalProfilSetting = () => {
+    profilSettingModal = new BrowserWindow(
+        {
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false
+            },
+            autoHideMenuBar: true,
+            title: 'Profil Toko',
+            parent: mainWindow,
+            modal: true,
+            width: 500,
+            height: 675,
+            resizable: false,
+            minimizable: false
+        }
+    )
+    profilSettingModal.loadFile('modals/profil-setting.html')
+    remote.enable(profilSettingModal.webContents)
+}
 ipcMain.on('sales-number', (e, msgSalesNumber) => {
     salesNum = msgSalesNumber
 })
@@ -30,20 +190,99 @@ mainWin = () => {
         height: 550,
         resizable: false,
         title: 'My Cashier 1.0',
-        autoHideMenuBar: true
+        autoHideMenuBar: true,
+        frame: false
     })
 
     mainWindow.loadFile('index.html')
-    db.serialize( () => {
-        console.log('we did it')
-    })
-    
-}
+    db.all(`select name from sqlite_master where type = 'table' and name not like 'sqlite_%'`, (err, rows) => {
+        if(rows.length < 1) {
+            mainWindow.webContents.on('did-finish-load', () => {
+                mainWindow.webContents.send('load:overlay', storeObject)
+            })
+			modalTableConfig()
+            db.run(`CREATE TABLE profil(id integer primary key, store_name varchar(150), store_tax_id varchar(150), store_address varchar(150), store_moto varchar(150), store_website varchar(150), phone_number varchar(150), email varchar(100), fax varchar(50), bank_account_one varchar(100), bank_name_one varchar(100), bank_account_two varchar(100), bank_name_two varchar(100), logo varchar(150))`, err => {
+                if(err) throw err
+                db.run(`CREATE TABLE users(id integer primary key autoincrement, username varchar(100) not null, password varchar(100) not null, access_level varchar(100) not null, first_name varchar(100) not null, last_name varchar(100) not null, position varchar(100), phone_number varchar(12), employee_number varchar(50), status varchar(20))`, err => {
+                    if(err) throw err
+                    db.run(`CREATE TABLE buyers (id integer primary key autoincrement, name varchar(150), address text, website varchar(100),telp_one varchar(20), telp_two varchar(20), email varchar(150))`, err => {
+                        if(err) throw err
+                        db.run(`CREATE TABLE products(id integer primary key autoincrement, product_name varchar(200) not null unique, product_code varchar(200), barcode varchar(200), category varchar(100), selling_price real, cost_of_product real, product_initial_qty integer, unit varchar(20), check(cost_of_product <= selling_price))`, err => {
+                            if(err) throw err
+                            db.run(`CREATE TABLE discount_final(id integer primary key autoincrement, input_date text, invoice_number varchar(100) not null, discount_percent real, discount_money real, total_discount_final real)`, err => {
+                                if(err) throw err
+                                db.run(`CREATE TABLE sales(id integer primary key autoincrement, input_date text, invoice_number varchar(100), buyer varchar(100), buyer_id integer, payment varchar(6), description text, po_number varchar(100), due_date text, term varchar(100), sales_admin varchar(100), product_name varchar(200) not null, product_code varchar(200) not null, cost_of_product real, price real, qty integer, unit varchar(20), discount_percent real, discount_money real, total real)`, err => {
+                                    if(err) throw err
+                                    db.run(`CREATE TABLE sales_evidence_info (id integer primary key autoincrement, invoice_number varchar(100), print_status varchar(15))`, err => {
+                                        if(err) throw err
+                                        db.run(`CREATE TABLE sales_tax(id integer primary key autoincrement, input_date text, invoice_number varchar(100), total_tax real)`, err => {
+                                            if(err) throw err
+                                            db.run(`CREATE TABLE tax(id integer primary key autoincrement, tax_name varchar(100), percentage real)`, err => {
+                                                if(err) throw err
+                                                db.run(`CREATE TABLE categories(id integer primary key autoincrement, category varchar(100))`, err => {
+                                                    if(err) throw err
+                                                    db.run(`CREATE TABLE units(id integer primary key autoincrement, unit varchar(20))`, err => {
+                                                        if(err) throw err
+                                                        db.run(`insert into profil(store_name, logo) values('My Store','shop.png')`, err => {
+                                                            if(err) throw err
+                                                            db.run(`insert into users(username, password, access_level, first_name, last_name) values('admin','admin','main_user','admin','satu')`, err => {
+                                                                if(err) throw err
+                                                                db.run(`insert into tax(tax_name, percentage) values('pajak','10')`, err => {
+                                                                    if(err) throw err
+                                                                    db.run(`insert into units(unit) values('Pack'),('Pcs'),('Kg'),('Lusin')`, err => {
+                                                                        if(err) throw err
+                                                                        db.run(`insert into categories(category) values('Electronic'),('Gadget'),('Peralatan'),('Lainnya')`, err => {
+                                                                            if(err) throw err
+                                                                            finilizeTableConfig = () => {
+                                                                                configTableModal.hide()
+                                                                                modalLogin()
+                                                                            }
+                                                                            setTimeout(finilizeTableConfig, 2000)
+                                                                        })
+                                                                    })
+                                                                })
+                                                            })
+                                                        })
+                                                    })
 
+                                                })
+
+                                            })
+                                        })
+                                    })
+                                })
+                            })
+                        })
+                    })
+                })
+            })
+        } else {
+            if(!login) {
+                db.all(`select * from profil where id = 1 order by id asc`, (err, row) => {
+                    if(err) throw err
+                    storeObject.name = row[0].store_name
+                    storeObject.logo = row[0].logo
+                })
+                mainWindow.webContents.on('did-finish-load', () => {
+                    mainWindow.webContents.send('load:overlay', storeObject)
+                })
+                modalLogin()
+            }
+        }
+    })
+}
+ipcMain.on('window:minimize', () => {
+    mainWindow.minimize()
+})
+ipcMain.on('window:close', () => {
+    app.quit()
+})
 app.on('ready', () => {
     mainWin()
 })
-
+ipcMain.on('close:app', () => {
+    app.quit()
+})
 ipcMain.on('load:product-window', () => {
     productWin()
 })
@@ -112,9 +351,13 @@ ipcMain.on('load:edit', (event, msgDocId, msgForm, msgWidth, msgHeight, msgRowId
 })
 
 ipcMain.on('update:success', (e, msgDocId) => {
+    console.log(msgDocId)
     switch(msgDocId) {
         case 'product-data':
             productWindow.webContents.send('update:success', 'Successfully updates product data')
+            break
+        case 'buyer-data':
+            buyerWindow.webContents.send('update:success', 'Successfully updates buyer data')
     }
     editDataModal.close()
 })
@@ -135,7 +378,7 @@ ipcMain.on('write:csv', (e, msgPath, msgContent) => {
 })
 
 
-loadToPdf = (param1, param2, file_path, docId = false, title) => {
+loadToPdf = (param1, param2, file_path, totalSales = false, docId = false, title) => {
     toPdf = new BrowserWindow({
         webPreferences: {
             nodeIntegration: true,
@@ -143,6 +386,13 @@ loadToPdf = (param1, param2, file_path, docId = false, title) => {
         },
         show:false
     })
+
+    let totalObject
+    if(totalSales) {
+        totalObject = totalSales
+    } else {
+        totalObject = ''
+    }
 
     let d = new Date()
     let day = d.getDate().toString().padStart(2,0)
@@ -174,22 +424,22 @@ loadToPdf = (param1, param2, file_path, docId = false, title) => {
 
     switch(docId) {
         case 'sales-report':
-            toPdf.loadFile('export-pdf/sales-record-pdf.html');
+            toPdf.loadFile('export-pdf/sales-report-pdf.html');
             break;
         default :
             toPdf.loadFile('export-pdf/toPdf.html')
     }
 
     toPdf.webContents.on('dom-ready', () => {
-        toPdf.webContents.send('load:table-to-pdf', param1, param2, titleObject, file_path)
+        toPdf.webContents.send('load:table-to-pdf', param1, param2, totalObject, titleObject, file_path)
     })
 
 
 
 }
 
-ipcMain.on('load:to-pdf', (e, msgThead, msgTbody, msgFilePath, msgDocId, msgTitle) => {
-    loadToPdf(msgThead, msgTbody, msgFilePath, msgDocId, msgTitle)
+ipcMain.on('load:to-pdf', (e, msgThead, msgTbody, msgFilePath, msgTotalSales,  msgDocId, msgTitle) => {
+    loadToPdf(msgThead, msgTbody, msgFilePath, msgTotalSales, msgDocId, msgTitle)
 })
 
 ipcMain.on('create:pdf', (e, file_path) => {
@@ -756,4 +1006,132 @@ modalBuyer = () => {
 
 ipcMain.on('load:buyer-form', () => {
     modalBuyer()
+})
+
+salesWin = () => {
+    const {width, height} = screen.getPrimaryDisplay().workAreaSize
+    salesWindow = new BrowserWindow(
+        {
+            webPreferences:
+            {
+                nodeIntegration: true,
+                contextIsolation: false
+            },
+            autoHideMenuBar: true,
+            width: width,
+            height: height,
+            title: 'My Cashier | Data Penjualan'
+        }
+    )
+    remote.enable(salesWindow.webContents)
+    salesWindow.loadFile('windows/sales-data.html')
+    salesWindow.webContents.on('did-finish-load', () => {
+        mainWindow.hide()
+    })
+    salesWindow.on('close', () => {
+        mainWindow.show()
+    })
+}
+
+ipcMain.on('load:sales-data-window', () => {
+    salesWin()
+})
+salesReportWin = () => {
+    const {width, height} = screen.getPrimaryDisplay().workAreaSize
+    salesReportWindow = new BrowserWindow(
+        {
+            webPreferences:
+            {
+                nodeIntegration: true,
+                contextIsolation: false
+            },
+            autoHideMenuBar: true,
+            width: width,
+            height: height,
+            title: 'My Cashier | Laporan Penjualan'
+        }
+    )
+    remote.enable(salesReportWindow.webContents)
+    salesReportWindow.loadFile('windows/sales-report.html')
+    salesReportWindow.webContents.on('did-finish-load', () => {
+        mainWindow.hide()
+    })
+    salesReportWindow.on('close', () => {
+        mainWindow.show()
+    })
+}
+ipcMain.on('load:sales-report-window', () => {
+    salesReportWin()
+})
+chartWin = () => {
+    const {width, height} = screen.getPrimaryDisplay().workAreaSize
+    chartWindow = new BrowserWindow(
+        {
+            webPreferences:
+            {
+                nodeIntegration: true,
+                contextIsolation: false
+            },
+            autoHideMenuBar: true,
+            width: width,
+            height: height,
+            title: 'My Cashier | Diagram Penjualan'
+        }
+    )
+    remote.enable(chartWindow.webContents)
+    chartWindow.loadFile('windows/chart.html')
+    chartWindow.webContents.on('did-finish-load', () => {
+        mainWindow.hide()
+    })
+    chartWindow.on('close', () => {
+        mainWindow.show()
+    })
+}
+ipcMain.on('load:chart-window', () => {
+    chartWin()
+})
+buyerWin = () => {
+    const {width, height} = screen.getPrimaryDisplay().workAreaSize
+    buyerWindow = new BrowserWindow(
+        {
+            webPreferences:
+            {
+                nodeIntegration: true,
+                contextIsolation: false
+            },
+            autoHideMenuBar: true,
+            width: width,
+            height: height,
+            title: 'My Cashier | Diagram Penjualan'
+        }
+    )
+    remote.enable(buyerWindow.webContents)
+    buyerWindow.loadFile('windows/buyer.html')
+    buyerWindow.webContents.on('did-finish-load', () => {
+        mainWindow.hide()
+    })
+    buyerWindow.on('close', () => {
+        mainWindow.show()
+    })
+}
+ipcMain.on('load:buyer-window', () => {
+    buyerWin()
+})
+
+ipcMain.on('load:setting', (e, msgParam) => {
+    switch(msgParam) {
+        case 'general':
+            modalGeneralSetting()
+            break
+        case 'user':
+            modalUserSetting()
+            break
+        default:
+            modalProfilSetting()
+    }
+})
+
+ipcMain.on('success:update-user', () => {
+    editDataModal.close()
+    userSettingModal.webContents.send('success:update-user')
 })
