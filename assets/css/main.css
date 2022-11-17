@@ -208,3 +208,18 @@ tbody#data:hover {
     border-bottom: 1px solid #B3B6B7;
     border-top: 1px solid #B3B6B7;
 }
+.overlay {
+    display: block;
+    position: fixed;
+    background: rgba(13, 148, 238);
+    width: 100%;
+    height: 100%;
+    transition: all 0.5s ease-in-out;
+    z-index: 1000;
+}
+.overlay.out{
+    height: 0%
+}
+.overlay.in{
+    height: 100%
+}
