@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+    <div style="padding: 20px 20px">
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="header">
+                    <div class="store-info">
+                        <h5 id="store-name"></h5>
+                        <div id="store-address"></div>
+                        <div id="date"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="padding: 20px 20px">
+        <div class="row">
+            <div class="col-12">
+                <div class="box">
+                    <div class="box-header with-border">
+                        <div class="row">
+                            <div class="col-auto" style="font-size: 15px; color: grey">
+                                <i class="fa fa-clipboard"></i> Laporan Penjualan
+                            </div>
+                        </div>
+                    </div>
+                    <div class="box-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-borderless table-hover">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Bulan/Tanggal</th>
+                                        <th><span class="float-end">Penjualan</span></th>
+                                        <th><span class="float-end">Potongan</span></th>
+                                        <th><span class="float-end">Penjualan Bersih</span></th>
+                                        <th><span class="float-end">Harga Pokok Penjualan</span></th>
+                                        <th><span class="float-end">Profit</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="data">
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover table-striped" style="font-size: 13px">
+                                <tbody>
+                                    <tr>
+                                        <td><span class="float-end">Total Penjualan Bersih</span></td>
+                                        <td>: </td>
+                                        <td><span class="float-end"><b id="net-total-sales"></b></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="float-end">Total HPP</span></td>
+                                        <td>: </td>
+                                        <td><span class="float-end"><b id="total-cogs"></b></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="float-end">Total Profit</span></td>
+                                        <td>: </td>
+                                        <td><span class="float-end"><b id="total-profit"></b></span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../assets/jquery/jquery-1.9.0.min.js"></script>
+    <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../assets/js/require.js"></script>
+    <script>
+        ipcRenderer.on('load:table-to-pdf', (e, thead, tbody, totalObject, titleObject, file_path) => {
+
+        loadPdfData = () => {
+            $('#store-name').html(titleObject.storeName)
+            $('#store-address').html(titleObject.storeAddress)
+            $('#date').html(`Tanggal : ${titleObject.date}`)
+            $('#data').html(tbody)
+            $('#net-total-sales').html(totalObject.totalNetSales)
+            $('#total-cogs').html(totalObject.totalCogs)
+            $('#total-profit').html(totalObject.totalProfit)
+            return true
+            }
+
+            if(loadPdfData()) {
+                ipcRenderer.send('create:pdf', file_path)
+            }
+        })
+    </script>
+</body>
+</html>

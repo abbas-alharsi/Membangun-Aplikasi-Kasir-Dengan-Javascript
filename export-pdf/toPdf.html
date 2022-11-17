@@ -52,7 +52,7 @@
     <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
     <script src="../assets/js/require.js"></script>
     <script>
-        ipcRenderer.on('load:table-to-pdf', (e, thead, tbody, titleObject, file_path) => {
+        ipcRenderer.on('load:table-to-pdf', (e, thead, tbody, totalObject, titleObject, file_path) => {
 
             loadPdfData = () => {
                 $('#theadToPdf').html(thead)
