@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "package-win": "electron-packager . --overwrite --paltform-win32 --arch=x64 --icon=assets/images/icons/cashier-logo.ico --prune=true --out=release-builds"
+    "package-win": "electron-packager . --overwrite --platform-win32 --arch=x64 --icon=assets/images/icons/cashier-logo.ico --prune=true --out=release-builds"
   },
   "author": "Abbas Alharsi",
   "license": "ISC",
